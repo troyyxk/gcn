@@ -6,6 +6,7 @@ import tensorflow as tf
 
 from gcn.utils import *
 from gcn.models import GCN, MLP
+import numpy as np
 
 # Set random seed
 seed = 123
@@ -27,23 +28,52 @@ flags.DEFINE_integer('max_degree', 3, 'Maximum Chebyshev polynomial degree.')
 
 # Load data
 adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data(FLAGS.dataset)
+print("---------------y_train-----------")
+print(type(y_train))
+print(y_train.shape)
+print(y_train)
+print("-----------------------")
+print(FLAGS.dataset)
+print("-----------------------")
 
 # Some preprocessing
 features = preprocess_features(features)
 if FLAGS.model == 'gcn':
     support = [preprocess_adj(adj)]
+    print("adj type: ", type(adj))
+    print("------------gcn---------")
+    # print("support type: ", type(support))
+    # print(support)
+    # print("-----------------------")
+    print("num of 1s(links)", np.sum(adj.toarray()))
+    print(adj.shape)
+    print(adj)
+    print(adj.toarray().shape)
+    print(adj.toarray())
     num_supports = 1
     model_func = GCN
 elif FLAGS.model == 'gcn_cheby':
     support = chebyshev_polynomials(adj, FLAGS.max_degree)
+    print("------------gcn_cheby---------")
+    print(support)
+    print("-----------------------")
+    print(adj)
     num_supports = 1 + FLAGS.max_degree
     model_func = GCN
 elif FLAGS.model == 'dense':
     support = [preprocess_adj(adj)]  # Not used
+    print("------------dense---------")
+    print(support)
+    print("-----------------------")
+    print(adj)
     num_supports = 1
     model_func = MLP
 else:
     raise ValueError('Invalid argument for model: ' + str(FLAGS.model))
+
+with open('adj.txt', 'w') as f:
+    for item in adj.toarray():
+        f.write("%s\n" % item)
 
 # Define placeholders
 placeholders = {
@@ -75,6 +105,21 @@ sess.run(tf.global_variables_initializer())
 
 cost_val = []
 
+print("support type: ", type(support))
+print(len(support[0][0]))
+print(support[0][0])
+print("---------------------------")
+print(len(support[0][1]))
+print(support[0][1])
+
+with open('support00.txt', 'w') as f:
+    for item in support[0][0]:
+        f.write("%s\n" % item)
+
+with open('support01.txt', 'w') as f:
+    for item in support[0][1]:
+        f.write("%s\n" % item)
+
 # Train model
 for epoch in range(FLAGS.epochs):
 
@@ -82,6 +127,10 @@ for epoch in range(FLAGS.epochs):
     # Construct feed dictionary
     feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
     feed_dict.update({placeholders['dropout']: FLAGS.dropout})
+    print("--------------------feed_dict------------------")
+    print(feed_dict[placeholders['support'][0]])
+    # placeholders['support'][0]] is literally the support, it self is a list which is not hashable
+    break
 
     # Training step
     outs = sess.run([model.opt_op, model.loss, model.accuracy], feed_dict=feed_dict)

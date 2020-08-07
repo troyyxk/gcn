@@ -49,8 +49,20 @@ def load_data(dataset_str):
                 objects.append(pkl.load(f, encoding='latin1'))
             else:
                 objects.append(pkl.load(f))
-
     x, y, tx, ty, allx, ally, graph = tuple(objects)
+    print("(((((((((((graph)))))))))))))")
+    print(type(graph))
+    print(graph)
+    print("(((((((((((x))))))))))))")
+    print(type(x))
+    print(x.toarray().shape)
+    print(x.toarray())
+    print(x)
+    print("(((((((((((y)))))))))))))")
+    print(type(y))
+    print(y.shape)
+    print(y)
+
     test_idx_reorder = parse_index_file("data/ind.{}.test.index".format(dataset_str))
     test_idx_range = np.sort(test_idx_reorder)
 
@@ -68,6 +80,9 @@ def load_data(dataset_str):
     features = sp.vstack((allx, tx)).tolil()
     features[test_idx_reorder, :] = features[test_idx_range, :]
     adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
+    print("(((((((((((((((((((adj)))))))))))")
+    print(type(adj))
+    print(adj)
 
     labels = np.vstack((ally, ty))
     labels[test_idx_reorder, :] = labels[test_idx_range, :]
@@ -131,9 +146,22 @@ def normalize_adj(adj):
 
 def preprocess_adj(adj):
     """Preprocessing of adjacency matrix for simple GCN model and conversion to tuple representation."""
+    print("***********************")
+    print("adj")
+    print(type(adj))
+    print(adj)
+    print("*********************")
     adj_normalized = normalize_adj(adj + sp.eye(adj.shape[0]))
-    return sparse_to_tuple(adj_normalized)
+    print("***********************")
+    print("adj_normalized")
+    print(type(adj_normalized))
+    print(adj_normalized)
+    print("***********************")
 
+    a = sparse_to_tuple(adj_normalized)
+    # print(a)
+    # print("***********************")
+    return a
 
 def construct_feed_dict(features, support, labels, labels_mask, placeholders):
     """Construct feed dictionary."""
